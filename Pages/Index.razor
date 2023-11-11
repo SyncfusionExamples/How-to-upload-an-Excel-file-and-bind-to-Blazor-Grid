@@ -5,7 +5,7 @@
 @using Syncfusion.Blazor.Inputs
 @using System.Data
 @using System.Dynamic
-@using ServerApp.Data;
+@using UploadingExcelFile.Data;
 @inject WeatherForecastService WeatherService
 
 <SfUploader AutoUpload="false">
@@ -17,13 +17,13 @@
     <SfGrid @ref="Grid" DataSource="@CustomerList" AllowFiltering="true" AllowPaging="true">
         <GridColumns>
             @{
-            foreach (var val in Columns)
-            {
-                <GridColumn Field="@val"></GridColumn>
+                foreach (var val in Columns)
+                {
+                    <GridColumn Field="@val"></GridColumn>
+                }
             }
-        }
-    </GridColumns>
-</SfGrid>
+        </GridColumns>
+    </SfGrid>
 }
 else
 {
@@ -32,11 +32,11 @@ else
 @code {
     SfGrid<ExpandoObject> Grid;
     public DataTable table = new DataTable();
-    private void OnChange(UploadChangeEventArgs args)
+    private async void OnChange(UploadChangeEventArgs args)
     {
         foreach (var file in args.Files)
         {
-            var path = file.FileInfo.Name;
+            var path = @"path" + file.FileInfo.Name;
             ExcelEngine excelEngine = new ExcelEngine();
             IApplication application = excelEngine.Excel;
             application.DefaultVersion = ExcelVersion.Excel2016;
@@ -44,9 +44,11 @@ else
             //get local wwwroot path of application
             var check = WeatherService.GetPath(path);
             //create new filestream into above path
-            FileStream openFileStream = new FileStream(check, FileMode.OpenOrCreate);
+            FileStream openFileStream = new FileStream(check, FileMode.OpenOrCreate, FileAccess.Write);
             //write the uploaded memorystream to file stream
-            file.Stream.WriteTo(openFileStream);           
+            //file.Stream.WriteTo(openFileStream);
+            await file.File.OpenReadStream(long.MaxValue).CopyToAsync(openFileStream);
+            openFileStream.Close();
             //again open the filstream from that path
             FileStream fileStream = new FileStream(check, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             //access the workbook from that filtestream
@@ -54,7 +56,7 @@ else
             IWorksheet worksheet = workbook.Worksheets[0];
             //get datatable from workbook
             table = worksheet.ExportDataTable(worksheet.UsedRange, ExcelExportDataTableOptions.ColumnNames);
-            //convert to dynamic list and append to Grid. 
+            //convert to dynamic list and append to Grid.
             GenerateListFromTable(table);
         }
     }

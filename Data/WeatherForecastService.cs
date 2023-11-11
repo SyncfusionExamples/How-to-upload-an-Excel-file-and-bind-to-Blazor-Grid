@@ -1,12 +1,7 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using System.IO;
+using Microsoft.Extensions.Hosting;
 
-namespace ServerApp.Data
+namespace UploadingExcelFile.Data
 {
-    
     public class WeatherForecastService
     {
         private IWebHostEnvironment _hostEnvironment;
@@ -16,21 +11,20 @@ namespace ServerApp.Data
         }
         private static readonly string[] Summaries = new[]
         {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
+        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+    };
         public string GetPath(string filename)
         {
             string path = Path.Combine(_hostEnvironment.WebRootPath, filename);
             return path;
         }
-        public Task<WeatherForecast[]> GetForecastAsync(DateTime startDate)
+        public Task<WeatherForecast[]> GetForecastAsync(DateOnly startDate)
         {
-            var rng = new Random();
             return Task.FromResult(Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = startDate.AddDays(index),
-                TemperatureC = rng.Next(-20, 55),
-                Summary = Summaries[rng.Next(Summaries.Length)]
+                TemperatureC = Random.Shared.Next(-20, 55),
+                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
             }).ToArray());
         }
     }
